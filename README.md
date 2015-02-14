@@ -63,20 +63,32 @@ The following are some examples DBTools can be used:
 Setup
 =====
 
-  1. Add DBTools Generator plugin pom.xml file.  (latest version in Maven Central Repo: http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22dbtools-gen%22)
+  1. Add dbtools-jpa dependency and maven-dbtools-plugin (DBTools Generator) plugin pom.xml file.  (latest version in Maven Central Repo: http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22dbtools-gen%22)
 
-        <plugin>
-            <groupId>org.dbtools</groupId>
-            <artifactId>maven-dbtools-plugin</artifactId>
-            <version><latest-version></version>
-            <configuration>
-                <basePackageName>org.project.template.domain</basePackageName>
-                <schemaDir>${basedir}/src/main/database</schemaDir>
-                <dbVendor>mysql</dbVendor>
-                <dateTimeSupport>true</dateTimeSupport>
-            </configuration>
-        </plugin>
+        </dependencies>
+            <dependency>
+                <groupId>org.dbtools</groupId>
+                <artifactId>dbtools-jpa</artifactId>
+                <version><latest version></version>
+            </dependency>
+        </dependencies>
 
+
+       <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.dbtools</groupId>
+                    <artifactId>maven-dbtools-plugin</artifactId>
+                    <version><latest-version></version>
+                    <configuration>
+                        <basePackageName>org.project.template.domain</basePackageName>
+                        <schemaDir>${basedir}/src/main/database</schemaDir>
+                        <dbVendor>derby</dbVendor>
+                        <dateTimeSupport>true</dateTimeSupport>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
 
   2. For new projects, create initial schema.xml files (Default: new files will be created in src/main/database)
 
