@@ -62,16 +62,10 @@
             <artifactId>jsr305</artifactId>
             <version>2.0.3</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>joda-time</groupId>-->
-            <!--<artifactId>joda-time</artifactId>-->
-            <!--<version>2.7</version>-->
-            <!--<optional>true</optional>-->
-        <!--<dependency>-->
         <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>persistence-api</artifactId>
-            <version>1.0.2</version>
+            <groupId>org.hibernate.javax.persistence</groupId>
+            <artifactId>hibernate-jpa-2.1-api</artifactId>
+            <version>1.0.0.Final</version>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
@@ -82,6 +76,12 @@
             <groupId>org.dbtools</groupId>
             <artifactId>dbtools-query</artifactId>
             <version>2.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.7</version>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 
