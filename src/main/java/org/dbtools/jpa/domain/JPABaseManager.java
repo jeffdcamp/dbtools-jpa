@@ -42,10 +42,6 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
         }
     }
 
-    public T findByRowId(Object pk) {
-        return (T) getEntityManager().find(getRecordClass(), pk);
-    }
-
     public void deleteAll() {
         Query q = getEntityManager().createNativeQuery("DELETE FROM " + getTableName());
         q.executeUpdate();
@@ -96,6 +92,10 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
             query.setParameter(currentParam, whereArgs[i]);
         }
 
+        // for write to database and clear cache
+        getEntityManager().flush();
+        getEntityManager().clear();
+
         return query.executeUpdate();
     }
 
@@ -139,13 +139,16 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
         JPAQueryBuilder builder = new JPAQueryBuilder(getEntityManager());
 
         builder.object(getTableClassName());
-        builder.filter(selection);
+
+        if (selection != null) {
+            builder.filter(selection);
+        }
 
         if (orderBy != null) {
             builder.orderBy(orderBy);
         }
 
-        Query query = getEntityManager().createQuery("SELECT c FROM " + getTableClassName() + " c WHERE " + selection);
+        Query query = getEntityManager().createQuery(builder.buildQuery());
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
             query.setParameter(i, selectionArgs[i]);
@@ -154,7 +157,19 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
         return query.getResultList();
     }
 
-    @Nonnull
+    @Nullable
+    public T findByRowId(long id) {
+        TypedQuery<T> query = getEntityManager().createQuery("SELECT o FROM " + getTableClassName() + " o WHERE o." + getPrimaryKey() + " = ?0 ", getRecordClass());
+        query.setParameter(0, id);
+
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    @Nullable
     public T findBySelection(@Nullable String selection, @Nullable Object[] selectionArgs, @Nullable String orderBy) {
         JPAQueryBuilder builder = new JPAQueryBuilder(getEntityManager());
 
@@ -165,13 +180,17 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
             builder.orderBy(orderBy);
         }
 
-        TypedQuery<T> query = getEntityManager().createQuery("SELECT c FROM " + getTableClassName() + " c WHERE " + selection, getRecordClass());
+        TypedQuery<T> query = getEntityManager().createQuery("SELECT o FROM " + getTableClassName() + " o WHERE " + selection, getRecordClass());
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
             query.setParameter(i, selectionArgs[i]);
         }
 
-        return query.getSingleResult();
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     /**
@@ -199,7 +218,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
      * @param selectionArgs query arguments
      * @return object T
      */
-    @Nonnull
+    @Nullable
     public T findByRawQuery(@Nullable String jpaQuery, @Nullable Object[] selectionArgs) {
         TypedQuery<T> query = getEntityManager().createQuery(jpaQuery, getRecordClass());
 
@@ -207,7 +226,11 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
             query.setParameter(i, selectionArgs[i]);
         }
 
-        return query.getSingleResult();
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     public long findCount() {
