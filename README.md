@@ -83,6 +83,8 @@ Setup
                     <configuration>
                         <basePackageName>org.project.template.domain</basePackageName>
                         <schemaDir>${basedir}/src/main/database</schemaDir>
+                        <injectionSupport>true</injectionSupport> <!-- support for Inject (via Spring, EE, Guice, Dagger, etc) -->
+                        <javaEESupport>true</javaEESupport> <!-- support for Spring, JavaEE, etc -->
                         <dbVendor>derby</dbVendor>
                         <dateTimeSupport>true</dateTimeSupport>
                     </configuration>
