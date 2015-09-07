@@ -23,6 +23,7 @@ public class IndividualBaseRecord extends JPABaseRecord implements java.io.Seria
     public static final String TABLE = "INDIVIDUAL";
     public static final String TABLE_CLASSNAME = "Individual";
     public static final String PRIMARY_KEY_COLUMN = "id";
+    public static final String PRIMARY_KEY_COLUMN_PROPERTY = "id";
     public static final String C_ID = "id";
     public static final String FULL_C_ID = "INDIVIDUAL.id";
     public static final String P_ID = "id";

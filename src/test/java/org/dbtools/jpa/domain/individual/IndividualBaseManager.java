@@ -40,6 +40,11 @@ public class IndividualBaseManager extends JPABaseManager<Individual> {
         return Individual.PRIMARY_KEY_COLUMN;
     }
 
+    @Override
+    public String getPrimaryKeyProperty() {
+        return Individual.PRIMARY_KEY_COLUMN_PROPERTY;
+    }
+
     public EntityManager getEntityManager() {
         return entityManager;
     }

@@ -17,6 +17,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
     public abstract String getTableName();
     public abstract String getTableClassName();
     public abstract String getPrimaryKey();
+    public abstract String getPrimaryKeyProperty();
     public abstract EntityManager getEntityManager();
 
     public void create(T record) {
@@ -49,7 +50,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
 
     public int update(@Nonnull ContentValues values, long rowId) {
         int parameterPosition = values.size();
-        return update(values, getPrimaryKey() + " = ?" + parameterPosition, new Object[]{rowId});
+        return update(values, getPrimaryKeyProperty() + " = ?" + parameterPosition, new Object[]{rowId});
     }
 
     /**
@@ -100,15 +101,10 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
     }
 
     public int delete(long rowId) {
-        return delete(getPrimaryKey() + " = ?0", new Object[]{rowId});
+        return delete(getPrimaryKeyProperty() + " = ?0", new Object[]{rowId});
     }
 
     public int delete(@Nullable String where, @Nullable Object[] whereArgs) {
-        JPAQueryBuilder builder = new JPAQueryBuilder(getEntityManager());
-
-        builder.object(getTableClassName());
-        builder.filter(where);
-
         Query query = getEntityManager().createNativeQuery("DELETE FROM " + getTableName() + " WHERE " + where);
 
         for (int i = 0; whereArgs != null && i < whereArgs.length; i++) {
@@ -120,7 +116,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
 
     @Nonnull
     public List<T> findAll() {
-        Query q = getEntityManager().createQuery("SELECT o FROM " + getTableClassName() + " o");
+        TypedQuery<T> q = getEntityManager().createQuery("SELECT o FROM " + getTableClassName() + " o", getRecordClass());
         return q.getResultList();
     }
 
@@ -136,7 +132,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
 
     @Nonnull
     public List<T> findAllBySelection(@Nullable String selection, @Nullable Object[] selectionArgs, @Nullable String orderBy) {
-        JPAQueryBuilder builder = new JPAQueryBuilder(getEntityManager());
+        JPAQueryBuilder builder = new JPAQueryBuilder();
 
         builder.object(getTableClassName());
 
@@ -148,7 +144,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
             builder.orderBy(orderBy);
         }
 
-        Query query = getEntityManager().createQuery(builder.buildQuery());
+        TypedQuery<T> query = getEntityManager().createQuery(builder.buildQuery(), getRecordClass());
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
             query.setParameter(i, selectionArgs[i]);
@@ -159,7 +155,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
 
     @Nullable
     public T findByRowId(long id) {
-        TypedQuery<T> query = getEntityManager().createQuery("SELECT o FROM " + getTableClassName() + " o WHERE o." + getPrimaryKey() + " = ?0 ", getRecordClass());
+        TypedQuery<T> query = getEntityManager().createQuery("SELECT o FROM " + getTableClassName() + " o WHERE o." + getPrimaryKeyProperty() + " = ?0 ", getRecordClass());
         query.setParameter(0, id);
 
         try {
@@ -170,8 +166,13 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
     }
 
     @Nullable
+    public T findBySelection(@Nullable String selection, @Nullable Object[] selectionArgs) {
+        return findBySelection(selection, selectionArgs, null);
+    }
+
+    @Nullable
     public T findBySelection(@Nullable String selection, @Nullable Object[] selectionArgs, @Nullable String orderBy) {
-        JPAQueryBuilder builder = new JPAQueryBuilder(getEntityManager());
+        JPAQueryBuilder builder = new JPAQueryBuilder();
 
         builder.object(getTableClassName());
         builder.filter(selection);
@@ -202,7 +203,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
      */
     @Nonnull
     public List<T> findAllByRawQuery(@Nonnull String jpaQuery, @Nullable Object[] selectionArgs) {
-        Query query = getEntityManager().createQuery(jpaQuery);
+        TypedQuery<T> query = getEntityManager().createQuery(jpaQuery, getRecordClass());
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
             query.setParameter(i, selectionArgs[i]);
@@ -239,11 +240,6 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
     }
 
     public long findCountBySelection(@Nullable String selection, @Nullable Object[] selectionArgs) {
-        JPAQueryBuilder builder = new JPAQueryBuilder(getEntityManager());
-
-        builder.object(getTableClassName());
-        builder.filter(selection);
-
         Query query = getEntityManager().createNativeQuery("SELECT count(0) FROM " + getTableClassName() + " WHERE " + selection);
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
@@ -263,7 +259,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
      * @return query results value or defaultValue if no data was returned
      */
     public <I> I findValueByRawQuery(@Nonnull Class<I> valueType, @Nonnull String rawQuery, @Nullable Object[] selectionArgs, I defaultValue) {
-        JPAQueryBuilder builder = new JPAQueryBuilder(getEntityManager());
+        JPAQueryBuilder builder = new JPAQueryBuilder();
 
         builder.object(getTableClassName());
 
@@ -291,11 +287,6 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
      * @return query results value or defaultValue if no data was returned
      */
     public <I> I findValueBySelection(@Nonnull Class<I> valueType, @Nonnull String column, @Nonnull String selection, @Nullable Object[] selectionArgs, I defaultValue) {
-        JPAQueryBuilder builder = new JPAQueryBuilder(getEntityManager());
-
-        builder.object(getTableClassName());
-        builder.filter(selection);
-
         Query query = getEntityManager().createNativeQuery("SELECT " + column + " FROM " + getTableName() + " WHERE " + selection);
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
