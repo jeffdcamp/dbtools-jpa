@@ -25,7 +25,7 @@ public class IndividualManager extends IndividualBaseManager {
     }
 
     public List<Individual> findAllByIdRaw(long id) {
-        return findAllByRawQuery("SELECT o FROM " + Individual.TABLE_CLASSNAME + " o WHERE " + Individual.P_ID + " = ?0 ", new Object[]{id});
+        return findAllByRawQuery("SELECT * FROM " + Individual.TABLE + " WHERE " + Individual.C_ID + " = ?0 ", new Object[]{id});
     }
 
     public long findCountBySelectionByRowId(long id) {
@@ -45,6 +45,6 @@ public class IndividualManager extends IndividualBaseManager {
     }
 
     public Individual findIndividualByNameRaw(String name) {
-        return findByRawQuery("SELECT o FROM " + Individual.TABLE_CLASSNAME + " o WHERE " + Individual.P_NAME + " = ?0 ", new Object[]{name});
+        return findByRawQuery("SELECT * FROM " + Individual.TABLE + " WHERE " + Individual.C_NAME + " = ?0 ", new Object[]{name});
     }
 }

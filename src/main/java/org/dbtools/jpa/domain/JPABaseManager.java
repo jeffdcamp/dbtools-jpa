@@ -1,14 +1,13 @@
 package org.dbtools.jpa.domain;
 
 
-import org.dbtools.query.jpa.JPAQueryBuilder;
+import org.dbtools.query.sql.SQLQueryBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import java.util.List;
 
 public abstract class JPABaseManager<T extends JPABaseRecord> {
@@ -116,7 +115,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
 
     @Nonnull
     public List<T> findAll() {
-        TypedQuery<T> q = getEntityManager().createQuery("SELECT o FROM " + getTableClassName() + " o", getRecordClass());
+        Query q = getEntityManager().createNativeQuery("SELECT * FROM " + getTableName(), getRecordClass());
         return q.getResultList();
     }
 
@@ -132,9 +131,9 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
 
     @Nonnull
     public List<T> findAllBySelection(@Nullable String selection, @Nullable Object[] selectionArgs, @Nullable String orderBy) {
-        JPAQueryBuilder builder = new JPAQueryBuilder();
+        SQLQueryBuilder builder = new SQLQueryBuilder();
 
-        builder.object(getTableClassName());
+        builder.table(getTableName());
 
         if (selection != null) {
             builder.filter(selection);
@@ -144,7 +143,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
             builder.orderBy(orderBy);
         }
 
-        TypedQuery<T> query = getEntityManager().createQuery(builder.buildQuery(), getRecordClass());
+        Query query = getEntityManager().createNativeQuery(builder.buildQuery(), getRecordClass());
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
             query.setParameter(i, selectionArgs[i]);
@@ -155,11 +154,11 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
 
     @Nullable
     public T findByRowId(long id) {
-        TypedQuery<T> query = getEntityManager().createQuery("SELECT o FROM " + getTableClassName() + " o WHERE o." + getPrimaryKeyProperty() + " = ?0 ", getRecordClass());
+        Query query = getEntityManager().createNativeQuery("SELECT * FROM " + getTableName() + " WHERE " + getPrimaryKey() + " = ?0 ", getRecordClass());
         query.setParameter(0, id);
 
         try {
-            return query.getSingleResult();
+            return (T) query.getSingleResult();
         } catch (NoResultException e) {
             return null;
         }
@@ -172,38 +171,29 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
 
     @Nullable
     public T findBySelection(@Nullable String selection, @Nullable Object[] selectionArgs, @Nullable String orderBy) {
-        JPAQueryBuilder builder = new JPAQueryBuilder();
-
-        builder.object(getTableClassName());
-        builder.filter(selection);
-
-        if (orderBy != null) {
-            builder.orderBy(orderBy);
-        }
-
-        TypedQuery<T> query = getEntityManager().createQuery("SELECT o FROM " + getTableClassName() + " o WHERE " + selection, getRecordClass());
+        Query query = getEntityManager().createNativeQuery("SELECT * FROM " + getTableName() + " WHERE " + selection, getRecordClass());
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
             query.setParameter(i, selectionArgs[i]);
         }
 
         try {
-            return query.getSingleResult();
+            return (T) query.getSingleResult();
         } catch (NoResultException e) {
             return null;
         }
     }
 
     /**
-     * Populate of List from a JPA jpaQuery.
+     * Populate of List from a SQL sqlQuery.
      *
-     * @param jpaQuery      Custom JPA query
+     * @param sqlQuery      Custom SQL query
      * @param selectionArgs query arguments
      * @return List of object T
      */
     @Nonnull
-    public List<T> findAllByRawQuery(@Nonnull String jpaQuery, @Nullable Object[] selectionArgs) {
-        TypedQuery<T> query = getEntityManager().createQuery(jpaQuery, getRecordClass());
+    public List<T> findAllByRawQuery(@Nonnull String sqlQuery, @Nullable Object[] selectionArgs) {
+        Query query = getEntityManager().createNativeQuery(sqlQuery, getRecordClass());
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
             query.setParameter(i, selectionArgs[i]);
@@ -213,22 +203,22 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
     }
 
     /**
-     * Return T from a JPA rawQuery.
+     * Return T from a SQL rawQuery.
      *
-     * @param jpaQuery      Custom JPA query
+     * @param sqlQuery      Custom SQL query
      * @param selectionArgs query arguments
      * @return object T
      */
     @Nullable
-    public T findByRawQuery(@Nullable String jpaQuery, @Nullable Object[] selectionArgs) {
-        TypedQuery<T> query = getEntityManager().createQuery(jpaQuery, getRecordClass());
+    public T findByRawQuery(@Nullable String sqlQuery, @Nullable Object[] selectionArgs) {
+        Query query = getEntityManager().createNativeQuery(sqlQuery, getRecordClass());
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
             query.setParameter(i, selectionArgs[i]);
         }
 
         try {
-            return query.getSingleResult();
+            return (T) query.getSingleResult();
         } catch (NoResultException e) {
             return null;
         }
@@ -240,7 +230,7 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
     }
 
     public long findCountBySelection(@Nullable String selection, @Nullable Object[] selectionArgs) {
-        Query query = getEntityManager().createNativeQuery("SELECT count(0) FROM " + getTableClassName() + " WHERE " + selection);
+        Query query = getEntityManager().createNativeQuery("SELECT count(0) FROM " + getTableName() + " WHERE " + selection);
 
         for (int i = 0; selectionArgs != null && i < selectionArgs.length; i++) {
             query.setParameter(i, selectionArgs[i]);
@@ -259,9 +249,9 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
      * @return query results value or defaultValue if no data was returned
      */
     public <I> I findValueByRawQuery(@Nonnull Class<I> valueType, @Nonnull String rawQuery, @Nullable Object[] selectionArgs, I defaultValue) {
-        JPAQueryBuilder builder = new JPAQueryBuilder();
+        SQLQueryBuilder builder = new SQLQueryBuilder();
 
-        builder.object(getTableClassName());
+        builder.table(getTableName());
 
         Query query = getEntityManager().createNativeQuery(rawQuery);
 
@@ -299,6 +289,4 @@ public abstract class JPABaseManager<T extends JPABaseRecord> {
             return defaultValue;
         }
     }
-
-
 }
